@@ -1,0 +1,135 @@
+// cfalcon - a fork of falcon (another programming language of me Abhigyan Ghosh) in c. Cfalcon 2025-present all rights reserved.
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define TMP_C_FILE "cfalcon_tmp.c"
+// Trim spaces/newlines
+void trim(char *str) {
+    int len = strlen(str);
+    while (len > 0 && (str[len-1] == ' ' || str[len-1] == '\n' || str[len-1] == '\r'))
+        str[--len] = '\0';
+}
+
+// Detect type from value for 'let'
+const char* inferType(const char* value) {
+    if (strstr(value, "\"")) return "string";
+    if (strstr(value, ".")) return "double";
+    if (strcmp(value, "true") == 0 || strcmp(value, "false") == 0) return "bool";
+    return "int";
+}
+
+// Print with concatenation + type aware placeholders
+void processPrint(FILE *out, const char *line) {
+    const char *content = strchr(line, '(');
+    if (!content) return;
+    content++;
+
+    char temp[1024];
+    strcpy(temp, content);
+
+    // Remove trailing )
+    char *end = strrchr(temp, ')');
+    if (end) *end = '\0';
+
+    // Build final C code
+    fprintf(out, "{ char _tmp[1024] = \"\";\n");
+
+    char *token = strtok(temp, "+");
+    while (token) {
+        trim(token);
+        if (token[0] == '"') {
+            // String literal
+            fprintf(out, "strcat(_tmp, %s);\n", token);
+        } else if (token[0] == '{') {
+            // Variable inside {}
+            char var[64];
+            sscanf(token, "{%63[^}]}", var);
+            fprintf(out, "{ char _buf[64]; sprintf(_buf, \"%%g\", (double)%s); strcat(_tmp, _buf); }\n", var);
+        } else {
+            // Variable without {}
+            fprintf(out, "strcat(_tmp, %s);\n", token);
+        }
+        token = strtok(NULL, "+");
+    }
+
+    fprintf(out, "printf(\"%%s\\n\", _tmp); }\n");
+}
+
+// Compile Falcon → C → binary
+void compileFalconToC(const char *inputFile, const char *outputBin) {
+    FILE *in = fopen(inputFile, "r");
+    FILE *out = fopen(TMP_C_FILE, "w");
+
+    if (!in) { perror("Falcon source not found"); exit(1); }
+    if (!out) { perror("Temp C file failed"); exit(1); }
+
+    fprintf(out, "#include <stdio.h>\n#include <string.h>\n#include <stdbool.h>\n\nint main(){\n");
+
+    char line[512];
+    while (fgets(line, sizeof(line), in)) {
+        trim(line);
+        if (strlen(line) == 0) continue;
+
+        // let with type inference
+        if (strncmp(line, "let ", 4) == 0) {
+            char name[64], value[128];
+            sscanf(line+4, "%63s = %127[^\n]", name, value);
+            const char *type = inferType(value);
+            if (strcmp(type, "string") == 0) fprintf(out, "char %s[256] = %s;\n", name, value);
+            else if (strcmp(type, "bool") == 0) fprintf(out, "bool %s = %s;\n", name, value);
+            else fprintf(out, "%s %s = %s;\n", type, name, value);
+        }
+        // Explicit typed vars & const
+        else if (strncmp(line, "int ", 4) == 0 || strncmp(line, "float ", 6) == 0 ||
+                 strncmp(line, "double ", 7) == 0 || strncmp(line, "bool ", 5) == 0 ||
+                 strncmp(line, "string ", 7) == 0 || strncmp(line, "const ", 6) == 0) {
+            fprintf(out, "%s;\n", line);
+        }
+        // while loop
+        else if (strncmp(line, "while ", 6) == 0) {
+            fprintf(out, "while %s ", strchr(line, '('));
+        }
+        // if/elif/else
+        else if (strncmp(line, "if ", 3) == 0) fprintf(out, "if %s ", strchr(line, '('));
+        else if (strncmp(line, "elif ", 5) == 0) fprintf(out, "else if %s ", strchr(line, '('));
+        else if (strncmp(line, "else", 4) == 0) fprintf(out, "else ");
+        // switch/case/break/default
+        else if (strncmp(line, "switch ", 7) == 0) fprintf(out, "switch%s ", strchr(line, '('));
+        else if (strncmp(line, "case ", 5) == 0) fprintf(out, "case %s:\n", line+5);
+        else if (strncmp(line, "break", 5) == 0) fprintf(out, "break;\n");
+        else if (strncmp(line, "default", 7) == 0) fprintf(out, "default:\n");
+        // function
+        else if (strncmp(line, "func ", 5) == 0) {
+            char name[64], params[128];
+            sscanf(line+5, "%63[^ (](%127[^)])", name, params);
+            fprintf(out, "void %s(%s){\n", name, params);
+        }
+        else if (strcmp(line, "}") == 0) fprintf(out, "}\n");
+        // print with concat
+        else if (strncmp(line, "print(", 6) == 0) processPrint(out, line);
+        // raw code
+        else fprintf(out, "%s;\n", line);
+    }
+
+    fprintf(out, "return 0;}\n");
+    fclose(in);
+    fclose(out);
+
+    char cmd[512];
+    sprintf(cmd, "gcc %s -o %s", TMP_C_FILE, outputBin);
+    if (system(cmd) != 0) { perror("GCC failed"); exit(1); }
+
+    remove(TMP_C_FILE);
+}
+
+int main(int argc, char *argv[]) {
+    if (argc < 3) {
+        printf("Usage: %s input.cfl output_bin\n", argv[0]);
+        return 1;
+    }
+    compileFalconToC(argv[1], argv[2]);
+    printf("CFalcon succesfully compiled %s → %s\n", argv[1], argv[2]);
+    return 0;
+}

@@ -1,0 +1,15 @@
+## installation:
+git clone --depth 1 https://github.com/Agh0stt/cfalcon.git
+cd cfalcon/
+chmod +x install.sh
+bash install.sh
+#############
+to run a cfl (cfalcon file):
+cfalcon <file.cfl> <output_name>
+and to run the compiled binary:
+./output_name
+for example:
+cfalcon test.cfl test
+./test
+##########
+see the syntax.txt file for the syntax.

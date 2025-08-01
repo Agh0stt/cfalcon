@@ -91,6 +91,28 @@ void compileFalconToC(const char *inputFile, const char *outputBin) {
         else if (strncmp(line, "while ", 6) == 0) {
             fprintf(out, "while %s ", strchr(line, '('));
         }
+            // Input
+else if (strncmp(line, "input(", 6) == 0) {
+    char prompt[128], var[64];
+    sscanf(line, "input(\"%127[^\"]\", %63[^)])", prompt, var);
+
+    // Detect variable type based on earlier declaration
+    // (This is a simple method: we check if var name looks like string by existence of char[ or double/float/int/bool usage)
+    fprintf(out, "printf(\"%s\");\n", prompt);
+
+    if (strstr(var, "name") || strstr(var, "str") || strstr(var, "txt")) {
+        fprintf(out, "scanf(\"%%255s\", %s);\n", var);
+    } else if (strstr(var, "score") || strstr(var, "pi") || strstr(var, "double")) {
+        fprintf(out, "scanf(\"%%lf\", &%s);\n", var);
+    } else if (strstr(var, "age") || strstr(var, "count") || strstr(var, "int")) {
+        fprintf(out, "scanf(\"%%d\", &%s);\n", var);
+    } else if (strstr(var, "alive") || strstr(var, "flag") || strstr(var, "bool")) {
+        fprintf(out, "{ char _tmpBool[10]; scanf(\"%%9s\", _tmpBool); %s = (strcmp(_tmpBool, \"true\") == 0); }\n", var);
+    } else {
+        // Default: try double
+        fprintf(out, "scanf(\"%%lf\", &%s);\n", var);
+    }
+}
         // if/elif/else
         else if (strncmp(line, "if ", 3) == 0) fprintf(out, "if %s ", strchr(line, '('));
         else if (strncmp(line, "elif ", 5) == 0) fprintf(out, "else if %s ", strchr(line, '('));

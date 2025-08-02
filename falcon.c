@@ -41,7 +41,7 @@ void processPrint(FILE *out, const char *line) {
     while (token) {
         trim(token);
         if (token[0] == '"') {
-            // String literal
+            // String literal with escape sequences
             fprintf(out, "strcat(_tmp, %s);\n", token);
         } else if (token[0] == '{') {
             // Variable inside {}
@@ -55,6 +55,7 @@ void processPrint(FILE *out, const char *line) {
         token = strtok(NULL, "+");
     }
 
+    // Print result (C will handle \n and \t escapes automatically)
     fprintf(out, "printf(\"%%s\\n\", _tmp); }\n");
 }
 // Compile Falcon → C → binary

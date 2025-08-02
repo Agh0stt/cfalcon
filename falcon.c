@@ -142,6 +142,19 @@ void compileFalconToC(const char *inputFile, const char *outputBin) {
             fprintf(out, "#include \"%s\"\n", header);
         }
     }
+} else if (strncmp(line, "array<", 6) == 0) {
+    char type[32], name[64], size[16], values[256];
+
+    // Match array with size: array<int> nums[5] = {1,2,3,4,5}
+    if (sscanf(line + 6, "%31[^>]> %63[^[][%15[^]]] = {%255[^}]}", 
+               type, name, size, values) == 4) {
+        fprintf(out, "%s %s[%s] = {%s};\n", type, name, size, values);
+    }
+    // Match array without size: array<int> nums = {1,2,3}
+    else if (sscanf(line + 6, "%31[^>]> %63s = {%255[^}]}", 
+                    type, name, values) == 3) {
+        fprintf(out, "%s %s[] = {%s};\n", type, name, values);
+    }
 }
 else if (strncmp(line, "} while", 7) == 0) {
     fprintf(out, "} while %s;\n", strchr(line, '('));

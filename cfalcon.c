@@ -21,6 +21,7 @@ const char* inferType(const char* value) {
 }
 
 // Print with concatenation + type aware placeholders
+// Print with concatenation + type-aware number conversion
 void processPrint(FILE *out, const char *line) {
     const char *content = strchr(line, '(');
     if (!content) return;
@@ -49,14 +50,13 @@ void processPrint(FILE *out, const char *line) {
             fprintf(out, "{ char _buf[64]; sprintf(_buf, \"%%g\", (double)%s); strcat(_tmp, _buf); }\n", var);
         } else {
             // Variable without {}
-            fprintf(out, "strcat(_tmp, %s);\n", token);
+            fprintf(out, "{ char _buf[64]; sprintf(_buf, \"%%g\", (double)%s); strcat(_tmp, _buf); }\n", token);
         }
         token = strtok(NULL, "+");
     }
 
     fprintf(out, "printf(\"%%s\\n\", _tmp); }\n");
 }
-
 // Compile Falcon → C → binary
 void compileFalconToC(const char *inputFile, const char *outputBin) {
     FILE *in = fopen(inputFile, "r");

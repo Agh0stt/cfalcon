@@ -102,6 +102,29 @@ void compileFalconToC(const char *inputFile, const char *outputBin) {
 }
 else if (strncmp(line, "} while", 7) == 0) {
     fprintf(out, "} while %s;\n", strchr(line, '('));
+} // file open
+else if (strstr(line, " = open(")) {
+    char fname[64], path[128], mode[8];
+    sscanf(line, "file %63s = open(\"%127[^\"]\", \"%7[^\"]\")", fname, path, mode);
+    fprintf(out, "FILE *%s = fopen(\"%s\", \"%s\");\n", fname, path, mode);
+}
+// write
+else if (strncmp(line, "write(", 6) == 0) {
+    char fileVar[64], text[256];
+    sscanf(line, "write(%63[^,], \"%255[^\"]\")", fileVar, text);
+    fprintf(out, "fprintf(%s, \"%s\");\n", fileVar, text);
+}
+// close
+else if (strncmp(line, "close(", 6) == 0) {
+    char fileVar[64];
+    sscanf(line, "close(%63[^)])", fileVar);
+    fprintf(out, "fclose(%s);\n", fileVar);
+}
+    // read
+else if (strncmp(line, "read(", 5) == 0) {
+    char fileVar[64], destVar[64];
+    sscanf(line, "read(%63[^,], %63[^)])", fileVar, destVar);
+    fprintf(out, "{ char _buf[1024] = \"\"; fread(_buf, 1, sizeof(_buf)-1, %s); strcpy(%s, _buf); }\n", fileVar, destVar);
 }
         // while loop
         else if (strncmp(line, "while ", 6) == 0) {

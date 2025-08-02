@@ -1,4 +1,4 @@
-// cfalcon - a fork of falcon (another programming language of me Abhigyan Ghosh) in c. Cfalcon 2025-present all rights reserved.
+// falcon - copyright Abhigyan Ghosh 2025-present all rights reserved.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

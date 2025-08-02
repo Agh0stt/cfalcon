@@ -86,11 +86,36 @@ void compileFalconToC(const char *inputFile, const char *outputBin) {
                  strncmp(line, "double ", 7) == 0 || strncmp(line, "bool ", 5) == 0 ||
                  strncmp(line, "string ", 7) == 0 || strncmp(line, "const ", 6) == 0) {
             fprintf(out, "%s;\n", line);
-        }
+        } else if (strncmp(line, "enum ", 5) == 0) {
+    fprintf(out, "%s;\n", line);
+        } else if (strstr(line, "in range(")) {
+    char var[64], start[64], end[64];
+    if (sscanf(line, "for %63s in range(%63[^,], %63[^)])", var, start, end) == 3) {
+        fprintf(out, "for (int %s = %s; %s < %s; %s++) {\n", var, start, var, end, var);
+    } else if (sscanf(line, "for %63s in range(%63[^)])", var, end) == 2) {
+        fprintf(out, "for (int %s = 0; %s < %s; %s++) {\n", var, var, end, var);
+    }
+        }  else if (strncmp(line, "for ", 4) == 0 && strstr(line, "(")) {
+    fprintf(out, "for %s\n", strchr(line, '('));
+        } else if (strncmp(line, "do", 2) == 0) {
+    fprintf(out, "do {\n");
+}
+else if (strncmp(line, "} while", 7) == 0) {
+    fprintf(out, "} while %s;\n", strchr(line, '('));
+}
         // while loop
         else if (strncmp(line, "while ", 6) == 0) {
             fprintf(out, "while %s ", strchr(line, '('));
-        }
+        } else if (strncmp(line, "struct ", 7) == 0) {
+    fprintf(out, "%s {\n", line);
+}
+else if (strstr(line, "=") && strchr(line, '}') == NULL) {
+    // Inside struct: typed fields
+    fprintf(out, "%s;\n", line);
+}
+else if (strchr(line, '}')) {
+    fprintf(out, "};\n");
+}
             // Input
 else if (strncmp(line, "input(", 6) == 0) {
     char prompt[128], var[64];

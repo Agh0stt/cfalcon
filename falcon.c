@@ -196,7 +196,7 @@ else if (strncmp(line, "input(", 6) == 0) {
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
-        printf("Usage: %s input.cfl output_bin\n", argv[0]);
+        printf("Usage: %s input.fl output_bin\n", argv[0]);
         return 1;
     }
     compileFalconToC(argv[1], argv[2]);

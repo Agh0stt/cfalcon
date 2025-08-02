@@ -69,3 +69,8 @@ print("Name: " + name)
 print("Age: {age}")
 print("Score: {score}")
 print("Alive: {alive}")
+## sleep
+sleep(2)
+## escapes
+\n 
+\t

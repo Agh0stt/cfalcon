@@ -89,3 +89,7 @@ ifndef CUSTOM_H
 ## fl code
 include("custom.h")
 print(X)
+## arrays:
+array<int> nums[5] = {1,2,3,4,5}
+array<double> prices = {3.5,4.2,5.0}
+array<string> words = {"hi","bye"}

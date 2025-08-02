@@ -74,3 +74,18 @@ sleep(2)
 ## escapes
 \n 
 \t
+## include:
+include()
+##include can have both libc and custom headers. example supports c *.h files.
+## for example:
+## custom.h:
+ifndef CUSTOM_H
+#define CUSTOM_H
+
+#define X 100
+#define Y 200
+
+#endif
+## fl code
+include("custom.h")
+print(X)

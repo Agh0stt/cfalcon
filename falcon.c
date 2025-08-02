@@ -117,6 +117,31 @@ void compileFalconToC(const char *inputFile, const char *outputBin) {
 #else
     fprintf(out, "sleep(%s);\n", timeStr);
 #endif
+} else if (strncmp(line, "include(", 8) == 0) {
+    char header[128];
+    if (sscanf(line, "include(\"%127[^\"]\")", header) == 1) {
+        
+        // Common stdlib headers list
+        const char* stdlibs[] = {
+            "stdio.h", "stdlib.h", "string.h", "math.h", "stdbool.h",
+            "ctype.h", "time.h", "unistd.h", "stdint.h", "limits.h",
+            "float.h", "assert.h", "errno.h", NULL
+        };
+
+        bool is_stdlib = false;
+        for (int i = 0; stdlibs[i] != NULL; i++) {
+            if (strcmp(header, stdlibs[i]) == 0) {
+                is_stdlib = true;
+                break;
+            }
+        }
+
+        if (is_stdlib) {
+            fprintf(out, "#include <%s>\n", header);
+        } else {
+            fprintf(out, "#include \"%s\"\n", header);
+        }
+    }
 }
 else if (strncmp(line, "} while", 7) == 0) {
     fprintf(out, "} while %s;\n", strchr(line, '('));

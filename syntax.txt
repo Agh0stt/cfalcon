@@ -1,4 +1,4 @@
-## cfalcon syntax:
+## falcon :
 ##arthimetics:
 + - * /
 ## vars:

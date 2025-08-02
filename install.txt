@@ -9,7 +9,7 @@ falcon <file.fl> <output_name>
 and to run the compiled binary:
 ./output_name
 for example:
-cfalcon test.fl test
+falcon test.fl test
 ./test
 ##########
 see the syntax.txt file for the syntax.

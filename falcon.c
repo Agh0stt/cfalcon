@@ -66,8 +66,17 @@ void compileFalconToC(const char *inputFile, const char *outputBin) {
     if (!in) { perror("Falcon source not found"); exit(1); }
     if (!out) { perror("Temp C file failed"); exit(1); }
 
-    fprintf(out, "#include <stdio.h>\n#include <string.h>\n#include <stdbool.h>\n\nint main(){\n");
-
+    fprintf(out,
+    "#include <stdio.h>\n"
+    "#include <string.h>\n"
+    "#include <stdbool.h>\n"
+#ifdef _WIN32
+    "#include <windows.h>\n"
+#else
+    "#include <unistd.h>\n"
+#endif
+    "\nint main() {\n"
+);
     char line[512];
     while (fgets(line, sizeof(line), in)) {
         trim(line);
@@ -100,6 +109,14 @@ void compileFalconToC(const char *inputFile, const char *outputBin) {
     fprintf(out, "for %s\n", strchr(line, '('));
         } else if (strncmp(line, "do", 2) == 0) {
     fprintf(out, "do {\n");
+} else if (strncmp(line, "sleep(", 6) == 0) {
+    char timeStr[32];
+    sscanf(line, "sleep(%31[^)])", timeStr);
+#ifdef _WIN32
+    fprintf(out, "Sleep(%s * 1000);\n", timeStr);
+#else
+    fprintf(out, "sleep(%s);\n", timeStr);
+#endif
 }
 else if (strncmp(line, "} while", 7) == 0) {
     fprintf(out, "} while %s;\n", strchr(line, '('));

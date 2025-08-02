@@ -8,14 +8,14 @@ else
 fi
 
 # Compile
-echo "Compiling cfalcon..."
-gcc cfalcon.c -o cfalcon || { echo "Compilation failed!"; exit 1; }
+echo "Compiling falcon..."
+gcc falcon.c -o falcon || { echo "Compilation failed!"; exit 1; }
 
 # Move binary
 echo "Installing to $BIN_PATH..."
-if mv cfalcon "$BIN_PATH/" 2>/dev/null; then
-    echo "thanks for installing cfalcon!"
+if mv falcon "$BIN_PATH/" 2>/dev/null; then
+    echo "thanks for installing falcon!"
 else
     echo "Permission denied. Trying with sudo..."
-    sudo mv cfalcon "$BIN_PATH/" && echo "thanks for installing cfalcon!"
+    sudo mv falcon "$BIN_PATH/" && echo "thanks for installing falcon!"
 fi
